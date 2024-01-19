@@ -28,6 +28,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
             <version>3.1.11</version>
@@ -74,7 +80,7 @@
                         <configuration>
                             <file>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</file>
                             <groupId>com.project.template</groupId>
-                            <artifactId>logger-starter</artifactId>
+                            <artifactId>logger-sql-starter</artifactId>
                             <version>1.0</version>
                             <packaging>jar</packaging>
                         </configuration>
