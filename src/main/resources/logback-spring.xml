@@ -13,7 +13,7 @@
     <!-- 日志文件存储天数 -->
     <springProperty scope="context" name="history" source="template.logger.file.history" defaultValue="30"/>
     <!-- 日志文件归档文件大小 -->
-    <springProperty scope="context" name="maxSize" source="template.logger.file.max-size" defaultValue="10MB"/>
+    <springProperty scope="context" name="size" source="template.logger.file.size" defaultValue="10MB"/>
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
@@ -54,7 +54,7 @@
             <!--日志文件保留天数-->
             <maxHistory>${history}</maxHistory>
             <!-- 设置文件大小限制 -->
-            <maxFileSize>${maxSize}</maxFileSize>
+            <maxFileSize>${size}</maxFileSize>
         </rollingPolicy>
         <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
