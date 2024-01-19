@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class TemplateLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "request_ip")
@@ -36,13 +36,13 @@ public class TemplateLog {
     @Column(name = "headers")
     private String headers;
 
-    @Column(name = "request_body")
+    @Column(name = "request_body", columnDefinition = "text")
     private String requestBody;
 
     @Column(name = "http_status")
     private Integer httpStatus;
 
-    @Column(name = "response_body")
+    @Column(name = "response_body", columnDefinition = "text")
     private String responseBody;
 
     @Column(name = "duration")

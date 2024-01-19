@@ -44,6 +44,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.43</version>
+        </dependency>
     </dependencies>
 
 
@@ -80,7 +86,7 @@
                         <configuration>
                             <file>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</file>
                             <groupId>com.project.template</groupId>
-                            <artifactId>logger-sql-starter</artifactId>
+                            <artifactId>logger-jpa-starter</artifactId>
                             <version>1.0</version>
                             <packaging>jar</packaging>
                         </configuration>
