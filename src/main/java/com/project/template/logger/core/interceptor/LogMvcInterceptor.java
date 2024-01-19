@@ -50,6 +50,7 @@ public class LogMvcInterceptor implements HandlerInterceptor {
             throw new LoggerException("request or response is null");
         }
         String requestURI = request.getRequestURI();
+        // 跳过所有js，css和ico资源
         if (requestURI.endsWith(".js") || requestURI.endsWith(".css") || requestURI.endsWith(".ico")) {
             return;
         }
