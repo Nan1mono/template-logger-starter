@@ -43,8 +43,6 @@ public class LogMvcInterceptor implements HandlerInterceptor {
     @Override
     public void postHandle(@Nullable HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Object handler,
                            ModelAndView modelAndView) throws IOException {
-        log.info("logger mongo enable:{}", enable);
-        log.info("logger mongo body:{}", body);
         if (!enable) {
             return;
         }
