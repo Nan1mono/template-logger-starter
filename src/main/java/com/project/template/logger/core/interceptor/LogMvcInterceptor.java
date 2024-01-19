@@ -55,7 +55,6 @@ public class LogMvcInterceptor implements HandlerInterceptor {
         }
         long startTime = (Long) request.getAttribute("startTime");
         long endTime = System.currentTimeMillis();
-        // Perform actions after request processing
         String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         // 获取相应信息
         TemplateLog templateLog = new TemplateLog();
