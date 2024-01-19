@@ -80,7 +80,7 @@
                         <configuration>
                             <file>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</file>
                             <groupId>com.project.template</groupId>
-                            <artifactId>logger-starter</artifactId>
+                            <artifactId>logger-mongo-starter</artifactId>
                             <version>1.0</version>
                             <packaging>jar</packaging>
                         </configuration>
