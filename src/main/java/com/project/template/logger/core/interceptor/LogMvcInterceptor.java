@@ -47,7 +47,7 @@ public class LogMvcInterceptor implements HandlerInterceptor {
             return;
         }
         if (ObjectUtils.isEmpty(request) || ObjectUtils.isEmpty(response)) {
-            throw new LoggerException();
+            throw new LoggerException("request or response is null");
         }
         String requestURI = request.getRequestURI();
         if (requestURI.endsWith(".js") || requestURI.endsWith(".css") || requestURI.endsWith(".ico")) {
