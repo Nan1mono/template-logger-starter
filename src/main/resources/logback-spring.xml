@@ -1,0 +1,63 @@
+<configuration>
+
+    <!-- 开启日志 -->
+    <springProperty scope="context" name="loggerEnable" source="template.logger.enable" defaultValue="true"/>
+    <!-- 定义日志级别 -->
+    <springProperty scope="context" name="loggerLevel" source="template.logger.level" defaultValue="INFO"/>
+    <!-- 指定日志文件开关 -->
+    <springProperty scope="context" name="fileEnable" source="template.logger.file.enable" defaultValue="false"/>
+    <!-- 指定日志文件名称 -->
+    <springProperty scope="context" name="fileName" source="template.logger.file.name" defaultValue="info.log"/>
+    <!-- 指定日志文件路径 -->
+    <springProperty scope="context" name="filePath" source="template.logger.file.path" defaultValue="./log"/>
+    <!-- 日志文件存储天数 -->
+    <springProperty scope="context" name="history" source="template.logger.file.history" defaultValue="30"/>
+    <!-- 日志文件归档文件大小 -->
+    <springProperty scope="context" name="maxSize" source="template.logger.file.max-size" defaultValue="10MB"/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- 日志控制总开关 -->
+    <if condition='property("loggerEnable").equals("false")'>
+        <then>
+            <springProperty scope="context" name="loggerLevel" source="OFF"/>
+        </then>
+    </if>
+
+    <if condition='property("fileEnable").equals("true")'>
+        <then>
+            <root level="${loggerLevel}">
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="FILE"/>
+            </root>
+        </then>
+        <else>
+            <root level="${loggerLevel}">
+                <appender-ref ref="STDOUT"/>
+            </root>
+        </else>
+    </if>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <!-- 设置日志文件名 -->
+        <file>${filePath}/${fileName}</file>
+        <!-- 文件滚动策略根据%d{patter}中的“patter”而定，此处为每天产生一个文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 归档文件名“.zip或.gz结尾”,表示归档文件自动压缩 -->
+            <FileNamePattern>${filePath}/%d{yyyy-MM-dd}.log.%i.gz</FileNamePattern>
+            <!--日志文件保留天数-->
+            <maxHistory>${history}</maxHistory>
+            <!-- 设置文件大小限制 -->
+            <maxFileSize>${maxSize}</maxFileSize>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+</configuration>
