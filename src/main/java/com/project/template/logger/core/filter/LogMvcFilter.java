@@ -11,13 +11,19 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,11 +35,15 @@ public class LogMvcFilter implements Filter {
 
     private boolean body = false;
 
-    private TemplateLogRepository repository;
+    private List<String> excluded = new ArrayList<>();
 
     private String enableProperty;
 
     private String bodyProperty;
+
+    private TemplateLogRepository repository;
+
+    private final PathMatcher matcher = new AntPathMatcher();
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -45,6 +55,15 @@ public class LogMvcFilter implements Filter {
                 return;
             }
             enableProperty = cxt.getEnvironment().getProperty("template.logger.jpa.enable");
+            String excludedStr = cxt.getEnvironment().getProperty("template.logger.jpa.excluded");
+            if (StringUtils.isNotBlank(excludedStr)){
+                try {
+                    excluded = List.of(excludedStr.split(","));
+                } catch (Exception e) {
+                    log.error("split char is not ',', excluded is empty");
+                    excluded = Collections.emptyList();
+                }
+            }
             if (StringUtils.isBlank(bodyProperty)){
                 bodyProperty = cxt.getEnvironment().getProperty("template.logger.jpa.body");
             }
@@ -74,6 +93,11 @@ public class LogMvcFilter implements Filter {
         String requestURI = httpRequest.getRequestURI();
         // 跳过所有js，css和ico资源
         if (requestURI.endsWith(".js") || requestURI.endsWith(".css") || requestURI.endsWith(".ico")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        // 跳过配置文件中已经排除的路由
+        if (!CollectionUtils.isEmpty(excluded) && excluded.stream().anyMatch(t -> matcher.match(t, requestURI))){
             chain.doFilter(request, response);
             return;
         }
