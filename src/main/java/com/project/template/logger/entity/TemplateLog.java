@@ -25,6 +25,8 @@ public class TemplateLog {
 
     private String requestBody;
 
+    private String enumeration;
+
     private Integer httpStatus;
 
     private String responseBody;
