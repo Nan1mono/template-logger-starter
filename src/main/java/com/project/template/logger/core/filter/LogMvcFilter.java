@@ -17,6 +17,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Enumeration;
 import java.util.stream.Collectors;
 
 @Component
@@ -24,21 +25,30 @@ import java.util.stream.Collectors;
 @ComponentScan(basePackages = "com.project.template.logger.core.filter")
 public class LogMvcFilter implements Filter {
 
-    private boolean enable;
+    private boolean enable = true;
 
-    private boolean body;
+    private boolean body = false;
 
     private TemplateLogRepository repository;
 
+    private String enableProperty;
+
+    private String bodyProperty;
+
     @Override
     public void init(FilterConfig filterConfig) {
-        ServletContext sc = filterConfig.getServletContext();
-        WebApplicationContext cxt = WebApplicationContextUtils.getWebApplicationContext(sc);
-        if (cxt == null){
-            return;
+        // 避免重复初始化
+        if (StringUtils.isBlank(enableProperty)){
+            ServletContext sc = filterConfig.getServletContext();
+            WebApplicationContext cxt = WebApplicationContextUtils.getWebApplicationContext(sc);
+            if (cxt == null){
+                return;
+            }
+            enableProperty = cxt.getEnvironment().getProperty("template.logger.jpa.enable");
+            if (StringUtils.isBlank(bodyProperty)){
+                bodyProperty = cxt.getEnvironment().getProperty("template.logger.jpa.body");
+            }
         }
-        String enableProperty = cxt.getEnvironment().getProperty("template.logger.jpa.enable");
-        String bodyProperty = cxt.getEnvironment().getProperty("template.logger.jpa.body");
         if (StringUtils.isNotBlank(enableProperty)){
             this.enable = Boolean.parseBoolean(enableProperty);
         }
@@ -67,8 +77,6 @@ public class LogMvcFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        // 读取请求体
-        String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         long startTime = System.currentTimeMillis();
         chain.doFilter(request, response); // 通过 responseWrapper 进行包装
         long endTime = System.currentTimeMillis();
@@ -83,6 +91,21 @@ public class LogMvcFilter implements Filter {
                 .setDuration(endTime - startTime);
         // 设置请求体
         if (body) {
+            // 读取POST请求体
+            String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            // 读取GET请求体
+            StringBuilder enumeration = new StringBuilder();
+            Enumeration<String> parameterNames = request.getParameterNames();
+            while (parameterNames.hasMoreElements()) {
+                String paramName = parameterNames.nextElement();
+                String paramValue = request.getParameter(paramName);
+                if (parameterNames.hasMoreElements()){
+                    enumeration.append(String.format("%s=%s&", paramName, paramValue));
+                }else {
+                    enumeration.append(String.format("%s=%s", paramName, paramValue));
+                }
+            }
+            templateLog.setEnumeration(enumeration.toString());
             templateLog.setRequestBody(requestBody);
         }
         // 保存日志

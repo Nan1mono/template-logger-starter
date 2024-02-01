@@ -39,6 +39,9 @@ public class TemplateLog {
     @Column(name = "request_body", columnDefinition = "text")
     private String requestBody;
 
+    @Column(name = "enumeration", columnDefinition = "text")
+    private String enumeration;
+
     @Column(name = "http_status")
     private Integer httpStatus;
 
