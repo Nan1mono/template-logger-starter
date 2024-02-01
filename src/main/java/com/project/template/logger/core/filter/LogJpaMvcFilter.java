@@ -139,7 +139,7 @@ public class LogJpaMvcFilter implements Filter {
     @Bean
     public FilterRegistrationBean<LogJpaMvcFilter> jpaLoggerFilter() {
         FilterRegistrationBean<LogJpaMvcFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new LogJpaMvcFilter());
+        registrationBean.setFilter(this);
         registrationBean.addUrlPatterns("/*");
         return registrationBean;
     }
