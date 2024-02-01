@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 @ComponentScan(basePackages = "com.project.template.logger.core.filter")
-public class LogMvcFilter implements Filter {
+public class LogJpaMvcFilter implements Filter {
 
     private boolean enable = true;
 
@@ -137,9 +137,9 @@ public class LogMvcFilter implements Filter {
     }
 
     @Bean
-    public FilterRegistrationBean<LogMvcFilter> loggingFilter() {
-        FilterRegistrationBean<LogMvcFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new LogMvcFilter());
+    public FilterRegistrationBean<LogJpaMvcFilter> loggingFilter() {
+        FilterRegistrationBean<LogJpaMvcFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new LogJpaMvcFilter());
         registrationBean.addUrlPatterns("/*");
         return registrationBean;
     }
