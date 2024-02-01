@@ -1,7 +1,7 @@
 package com.project.template.logger.core.filter;
 
 import com.project.template.logger.core.repository.TemplateLogRepository;
-import com.project.template.logger.entity.TemplateLog;
+import com.project.template.logger.entity.jpa.TemplateLog;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -101,9 +101,6 @@ public class LogJpaMvcFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        long startTime = System.currentTimeMillis();
-        chain.doFilter(request, response); // 通过 responseWrapper 进行包装
-        long endTime = System.currentTimeMillis();
         // 创建日志对象
         TemplateLog templateLog = new TemplateLog();
         templateLog.setRequestIP(request.getRemoteAddr())
@@ -111,8 +108,7 @@ public class LogJpaMvcFilter implements Filter {
                 .setRequestTime(LocalDateTime.now())
                 .setMethod(httpRequest.getMethod())
                 .setContentType(request.getContentType())
-                .setHttpStatus(httpResponse.getStatus())
-                .setDuration(endTime - startTime);
+                .setHttpStatus(httpResponse.getStatus());
         // 设置请求体
         if (body) {
             // 读取POST请求体
@@ -132,12 +128,16 @@ public class LogJpaMvcFilter implements Filter {
             templateLog.setEnumeration(enumeration.toString());
             templateLog.setRequestBody(requestBody);
         }
+        long startTime = System.currentTimeMillis();
+        chain.doFilter(request, response); // 通过 responseWrapper 进行包装
+        long endTime = System.currentTimeMillis();
+        templateLog.setDuration(endTime - startTime);
         // 保存日志
         repository.save(templateLog);
     }
 
     @Bean
-    public FilterRegistrationBean<LogJpaMvcFilter> loggingFilter() {
+    public FilterRegistrationBean<LogJpaMvcFilter> jpaLoggerFilter() {
         FilterRegistrationBean<LogJpaMvcFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new LogJpaMvcFilter());
         registrationBean.addUrlPatterns("/*");

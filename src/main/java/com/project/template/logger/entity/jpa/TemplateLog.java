@@ -1,4 +1,4 @@
-package com.project.template.logger.entity;
+package com.project.template.logger.entity.jpa;
 
 import jakarta.persistence.*;
 import lombok.Getter;
