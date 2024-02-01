@@ -42,9 +42,6 @@ public class TemplateLog {
     @Column(name = "http_status")
     private Integer httpStatus;
 
-    @Column(name = "response_body", columnDefinition = "text")
-    private String responseBody;
-
     @Column(name = "duration")
     private Long duration;
 

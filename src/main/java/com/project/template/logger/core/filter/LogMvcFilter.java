@@ -1,7 +1,6 @@
 package com.project.template.logger.core.filter;
 
 import com.project.template.logger.core.repository.TemplateLogRepository;
-import com.project.template.logger.core.wrapper.LogMvcResponseWrapper;
 import com.project.template.logger.entity.TemplateLog;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
@@ -17,7 +16,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -71,12 +69,9 @@ public class LogMvcFilter implements Filter {
         }
         // 读取请求体
         String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        // 处理响应
-        LogMvcResponseWrapper responseWrapper = new LogMvcResponseWrapper(httpResponse);
         long startTime = System.currentTimeMillis();
-        chain.doFilter(request, responseWrapper); // 通过 responseWrapper 进行包装
+        chain.doFilter(request, response); // 通过 responseWrapper 进行包装
         long endTime = System.currentTimeMillis();
-        byte[] content = responseWrapper.getContent();
         // 创建日志对象
         TemplateLog templateLog = new TemplateLog();
         templateLog.setRequestIP(request.getRemoteAddr())
@@ -85,17 +80,11 @@ public class LogMvcFilter implements Filter {
                 .setMethod(httpRequest.getMethod())
                 .setContentType(request.getContentType())
                 .setHttpStatus(httpResponse.getStatus())
-                .setResponseBody(new String(content, StandardCharsets.UTF_8)) // 获取响应体
                 .setDuration(endTime - startTime);
         // 设置请求体
         if (body) {
             templateLog.setRequestBody(requestBody);
         }
-        // 返回值字节
-        ServletOutputStream outputStream = httpResponse.getOutputStream();
-        outputStream.write(responseWrapper.getContent());
-        outputStream.flush();
-        outputStream.close();
         // 保存日志
         repository.save(templateLog);
     }
