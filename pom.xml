@@ -16,6 +16,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.project.template</groupId>
             <artifactId>logger-starter</artifactId>
             <version>1.0</version>
