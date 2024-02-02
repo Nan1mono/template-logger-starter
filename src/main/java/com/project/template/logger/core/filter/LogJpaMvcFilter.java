@@ -93,7 +93,6 @@ public class LogJpaMvcFilter implements Filter {
         }
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        ContentCachingRequestWrapper contentCachingRequestWrapper = new ContentCachingRequestWrapper(httpRequest);
         ContentCachingResponseWrapper contentCachingResponseWrapper = new ContentCachingResponseWrapper(httpResponse);
         String requestURI = httpRequest.getRequestURI();
         // 跳过所有js，css和ico资源
@@ -106,45 +105,7 @@ public class LogJpaMvcFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        long startTime = System.currentTimeMillis();
-        chain.doFilter(contentCachingRequestWrapper, contentCachingResponseWrapper);
-        long endTime = System.currentTimeMillis();
-        // 创建日志对象
-        TemplateLog templateLog = new TemplateLog();
-        templateLog.setRequestIP(request.getRemoteAddr())
-                .setRequestURL(requestURI)
-                .setRequestTime(LocalDateTime.now())
-                .setMethod(httpRequest.getMethod())
-                .setContentType(request.getContentType())
-                .setHttpStatus(httpResponse.getStatus())
-                .setDuration(endTime - startTime);
-        // 设置请求体
-        if (body) {
-            // 读取POST请求体
-            String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            // 读取GET请求体
-            StringBuilder enumeration = new StringBuilder();
-            Enumeration<String> parameterNames = request.getParameterNames();
-            while (parameterNames.hasMoreElements()) {
-                String paramName = parameterNames.nextElement();
-                String paramValue = request.getParameter(paramName);
-                if (parameterNames.hasMoreElements()) {
-                    enumeration.append(String.format("%s=%s&", paramName, paramValue));
-                } else {
-                    enumeration.append(String.format("%s=%s", paramName, paramValue));
-                }
-            }
-            templateLog.setEnumeration(enumeration.toString());
-            templateLog.setRequestBody(requestBody);
-            // 获取响应体
-            // 输出响应请求，如果请求响应是一个非文本，则跳过
-            String contentType = contentCachingResponseWrapper.getContentType();
-            if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/json"))) {
-                byte[] contentAsByteArray = contentCachingResponseWrapper.getContentAsByteArray();
-                String responseBody = new String(contentAsByteArray, StandardCharsets.UTF_8);
-                templateLog.setResponseBody(responseBody);
-            }
-        }
+        TemplateLog templateLog = TemplateLog.packageTemplate(request, response, chain, body);
         // 保存日志
         repository.save(templateLog);
         // 回写响应
