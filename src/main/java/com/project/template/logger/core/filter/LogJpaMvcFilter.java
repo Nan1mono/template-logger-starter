@@ -1,7 +1,7 @@
 package com.project.template.logger.core.filter;
 
 import com.project.template.logger.core.repository.TemplateLogRepository;
-import com.project.template.logger.entity.jpa.TemplateLog;
+import com.project.template.logger.entity.TemplateLog;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
