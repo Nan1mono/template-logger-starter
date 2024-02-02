@@ -17,8 +17,11 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +58,7 @@ public class LogMongoMvcFilter implements Filter {
                 return;
             }
             enableProperty = cxt.getEnvironment().getProperty("template.logger.mongo.enable");
-            String excludedStr = cxt.getEnvironment().getProperty("template.logger.mongo.excluded");
+            String excludedStr = cxt.getEnvironment().getProperty("template.logger.excluded");
             if (StringUtils.isNotBlank(excludedStr)){
                 try {
                     excluded = List.of(excludedStr.split(","));
@@ -90,6 +93,8 @@ public class LogMongoMvcFilter implements Filter {
         }
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+        ContentCachingRequestWrapper contentCachingRequestWrapper = new ContentCachingRequestWrapper(httpRequest);
+        ContentCachingResponseWrapper contentCachingResponseWrapper = new ContentCachingResponseWrapper(httpResponse);
         String requestURI = httpRequest.getRequestURI();
         // 跳过所有js，css和ico资源
         if (requestURI.endsWith(".js") || requestURI.endsWith(".css") || requestURI.endsWith(".ico")) {
@@ -97,12 +102,12 @@ public class LogMongoMvcFilter implements Filter {
             return;
         }
         // 跳过配置文件中已经排除的路由
-        if (!CollectionUtils.isEmpty(excluded) && excluded.stream().anyMatch(t -> matcher.match(t, requestURI))){
+        if (!CollectionUtils.isEmpty(excluded) && excluded.stream().anyMatch(t -> matcher.match(t, requestURI))) {
             chain.doFilter(request, response);
             return;
         }
         long startTime = System.currentTimeMillis();
-        chain.doFilter(request, response); // 通过 responseWrapper 进行包装
+        chain.doFilter(contentCachingRequestWrapper, contentCachingResponseWrapper);
         long endTime = System.currentTimeMillis();
         // 创建日志对象
         TemplateLog templateLog = new TemplateLog();
@@ -123,23 +128,33 @@ public class LogMongoMvcFilter implements Filter {
             while (parameterNames.hasMoreElements()) {
                 String paramName = parameterNames.nextElement();
                 String paramValue = request.getParameter(paramName);
-                if (parameterNames.hasMoreElements()){
+                if (parameterNames.hasMoreElements()) {
                     enumeration.append(String.format("%s=%s&", paramName, paramValue));
-                }else {
+                } else {
                     enumeration.append(String.format("%s=%s", paramName, paramValue));
                 }
             }
             templateLog.setEnumeration(enumeration.toString());
             templateLog.setRequestBody(requestBody);
+            // 获取响应体
+            // 输出响应请求，如果请求响应是一个非文本，则跳过
+            String contentType = contentCachingResponseWrapper.getContentType();
+            if (contentType != null && (contentType.startsWith("text/") || contentType.startsWith("application/json"))) {
+                byte[] contentAsByteArray = contentCachingResponseWrapper.getContentAsByteArray();
+                String responseBody = new String(contentAsByteArray, StandardCharsets.UTF_8);
+                templateLog.setResponseBody(responseBody);
+            }
         }
         // 保存日志
         mongoTemplate.save(templateLog);
+        // 回写响应
+        contentCachingResponseWrapper.copyBodyToResponse();
     }
 
     @Bean
     public FilterRegistrationBean<LogMongoMvcFilter> loggingFilter() {
         FilterRegistrationBean<LogMongoMvcFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new LogMongoMvcFilter());
+        registrationBean.setFilter(this);
         registrationBean.addUrlPatterns("/*");
         return registrationBean;
     }
