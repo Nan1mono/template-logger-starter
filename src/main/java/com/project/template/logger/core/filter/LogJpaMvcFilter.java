@@ -54,7 +54,7 @@ public class LogJpaMvcFilter implements Filter {
                 return;
             }
             enableProperty = cxt.getEnvironment().getProperty("template.logger.jpa.enable");
-            String excludedStr = cxt.getEnvironment().getProperty("template.logger.jpa.excluded");
+            String excludedStr = cxt.getEnvironment().getProperty("template.logger.excluded");
             if (StringUtils.isNotBlank(excludedStr)) {
                 try {
                     excluded = List.of(excludedStr.split(","));
