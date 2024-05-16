@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
@@ -65,7 +67,7 @@ public class TemplateLog {
     private Long duration;
 
 
-    public static TemplateLog packageTemplate(ServletRequest request, ServletResponse response, FilterChain chain, boolean body) throws ServletException, IOException {
+    public Map<ContentCachingRequestWrapper, ContentCachingResponseWrapper> packageTemplate(ServletRequest request, ServletResponse response, FilterChain chain, boolean body) throws ServletException, IOException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         ContentCachingRequestWrapper contentCachingRequestWrapper = new ContentCachingRequestWrapper(httpRequest);
@@ -75,8 +77,7 @@ public class TemplateLog {
         chain.doFilter(contentCachingRequestWrapper, contentCachingResponseWrapper);
         long endTime = System.currentTimeMillis();
         // 创建日志对象
-        TemplateLog templateLog = new TemplateLog();
-        templateLog.setRequestIP(request.getRemoteAddr())
+        this.setRequestIP(request.getRemoteAddr())
                 .setRequestURL(requestURI)
                 .setRequestTime(LocalDateTime.now())
                 .setMethod(httpRequest.getMethod())
@@ -86,7 +87,7 @@ public class TemplateLog {
         // 设置请求体
         if (body) {
             // 读取POST请求体
-            String thisRequestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            String thisRequestBody = contentCachingRequestWrapper.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
             // 读取GET请求体
             StringBuilder thisEnumeration = new StringBuilder();
             Enumeration<String> parameterNames = request.getParameterNames();
@@ -99,18 +100,20 @@ public class TemplateLog {
                     thisEnumeration.append(String.format("%s=%s", paramName, paramValue));
                 }
             }
-            templateLog.setEnumeration(thisEnumeration.toString());
-            templateLog.setRequestBody(thisRequestBody);
+            this.setEnumeration(thisEnumeration.toString());
+            this.setRequestBody(thisRequestBody);
             // 获取响应体
             // 输出响应请求，如果请求响应是一个非文本，则跳过
             String thisContentType = contentCachingResponseWrapper.getContentType();
             if (thisContentType != null && (thisContentType.startsWith("text/") || thisContentType.startsWith("application/json"))) {
                 byte[] contentAsByteArray = contentCachingResponseWrapper.getContentAsByteArray();
                 String thisResponseBody = new String(contentAsByteArray, StandardCharsets.UTF_8);
-                templateLog.setResponseBody(thisResponseBody);
+                this.setResponseBody(thisResponseBody);
             }
         }
-        return templateLog;
+        Map<ContentCachingRequestWrapper, ContentCachingResponseWrapper> wrapper = new HashMap<>();
+        wrapper.put(contentCachingRequestWrapper, contentCachingResponseWrapper);
+        return wrapper;
     }
 
 }
