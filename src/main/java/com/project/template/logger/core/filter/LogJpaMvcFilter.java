@@ -5,7 +5,6 @@ import com.project.template.logger.entity.TemplateLog;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -21,13 +20,10 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -92,8 +88,6 @@ public class LogJpaMvcFilter implements Filter {
             return;
         }
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        ContentCachingResponseWrapper contentCachingResponseWrapper = new ContentCachingResponseWrapper(httpResponse);
         String requestURI = httpRequest.getRequestURI();
         // 跳过所有js，css和ico资源
         if (requestURI.endsWith(".js") || requestURI.endsWith(".css") || requestURI.endsWith(".ico")) {
@@ -105,10 +99,14 @@ public class LogJpaMvcFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        TemplateLog templateLog = TemplateLog.packageTemplate(request, response, chain, body);
+        TemplateLog templateLog = new TemplateLog();
+        Map<ContentCachingRequestWrapper, ContentCachingResponseWrapper> wrapperMap
+                = templateLog.packageTemplate(request, response, chain, body);
         // 保存日志
         repository.save(templateLog);
         // 回写响应
+        ContentCachingRequestWrapper contentCachingRequestWrapper = wrapperMap.keySet().iterator().next();
+        ContentCachingResponseWrapper contentCachingResponseWrapper = wrapperMap.get(contentCachingRequestWrapper);
         contentCachingResponseWrapper.copyBodyToResponse();
     }
 
