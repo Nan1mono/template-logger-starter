@@ -104,7 +104,6 @@ public class LogMongoMvcFilter implements Filter {
         // 保存日志
         mongoTemplate.save(templateLog);
         // 回写响应
-        // 回写响应
         ContentCachingRequestWrapper contentCachingRequestWrapper = wrapperMap.keySet().iterator().next();
         ContentCachingResponseWrapper contentCachingResponseWrapper = wrapperMap.get(contentCachingRequestWrapper);
         contentCachingResponseWrapper.copyBodyToResponse();
