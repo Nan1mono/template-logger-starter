@@ -4,4 +4,5 @@ import com.project.template.logger.entity.TemplateLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TemplateLogRepository extends JpaRepository<TemplateLog, Long> {
+
 }
